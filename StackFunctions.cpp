@@ -24,7 +24,7 @@ int StackCtor(Stk_t* stk)
 
     ON_BIRDS(stk->canary2 = CANARY;)
 
-    FillPoison(stk);
+    //FillPoison(stk);
 
     #ifdef HASH_MODE
         assert(stk->data);
@@ -83,7 +83,7 @@ void StackPush(Stk_t* stk, stk_el_t el)
 
         ON_BIRDS(*((canary_t*) (stk->data + stk->capacity)) = CANARY;)
 
-        FillPoison(stk);
+        //FillPoison(stk);
 
         STACK_VERIFY(stk)
     }
@@ -98,16 +98,17 @@ void StackPush(Stk_t* stk, stk_el_t el)
     STACK_VERIFY(stk)
 }
 
-void StackPop(Stk_t* stk, stk_el_t* var)
+stk_el_t StackPop(Stk_t* stk)
 {
     HASH_VERIFY(stk)
     STACK_VERIFY(stk)
 
     if (stk->sz == 0) {
         fprintf(stderr, RED "Error: calling pop() for empty stack\n" COLOUR_RESET);
+        return POISON;
     } else {
-        *var = (stk->data)[--(stk->sz)];
-        (stk->data)[stk->sz] = POISON;
+        stk_el_t val = (stk->data)[--(stk->sz)];
+        //(stk->data)[stk->sz] = POISON;
 
         if (stk->capacity > CAPACITY_MIN && stk->sz == stk->capacity / 4) {
 
@@ -128,8 +129,11 @@ void StackPop(Stk_t* stk, stk_el_t* var)
             stk->data_hash = CalculateHash((const char*) stk->data, stk->capacity * sizeof(stk_el_t));
             stk->stk_hash  = CalculateHash((const char*) stk + STK_PTR_SHIFT, STK_SIZE);
         #endif
+
+        STACK_VERIFY(stk)
+
+        return val;
     }
-    STACK_VERIFY(stk)
 }
 
 int StackError(Stk_t* stk)
@@ -209,9 +213,9 @@ void StackDump(Stk_t* stk ON_DEBUG(, const char* file_name, const int line, cons
 
     for (size_t i = 0; i < stk->capacity; ++i) {
         if ((stk->data)[i] != POISON) {
-            printf("   *[%lld] = %f\n", i, (stk->data)[i]);
+            printf("   *[%lld] = %d\n", i, (stk->data)[i]);
         } else {
-            printf("    [%lld] = %f (POISON)\n", i, (stk->data)[i]);
+            printf("    [%lld] = %d (POISON)\n", i, (stk->data)[i]);
         }
     }
 

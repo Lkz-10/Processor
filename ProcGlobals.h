@@ -3,6 +3,20 @@
 
 #include <stdlib.h>
 
+typedef int elem_t;
+
+#define SPU_VERIFY             \
+    assert(SPU);               \
+    assert(SPU->code);         \
+    assert(SPU->stack.data);   \
+    assert(SPU->regs);
+
+const int CMD_MASK    = 0x0F;
+const int MODE_MASK   = 0xF0;
+
+const int NUMBER_MODE = 0x10;
+const int REGS_MODE   = 0x20;
+
 enum CMD_CODES
 {
     CMD_PUSH = 0x01,
@@ -30,10 +44,10 @@ const int REGS_NUM = 5;
 
 struct SPU_t
 {
-    int ip;
-    int* code;
-    Stk_t stack;
-    int regs[REGS_NUM];
+    int     ip;
+    elem_t* code;
+    elem_t  regs[REGS_NUM];
+    Stk_t   stack;
 };
 
 #endif

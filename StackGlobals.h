@@ -7,10 +7,10 @@
 
 #include <stdlib.h>
 
-typedef double        stk_el_t;
+typedef int           stk_el_t;
 typedef long long int canary_t;
 
-const stk_el_t POISON       = -79173490302.102;
+const stk_el_t POISON       = -12345;
 const size_t   CAPACITY_MIN = 10;
 const size_t   STK_SIZE     = sizeof(int) + 2 * sizeof(size_t) + sizeof(stk_el_t*);
 
