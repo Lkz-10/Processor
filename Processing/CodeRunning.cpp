@@ -1,76 +1,11 @@
-#include <stdio.h>
-
-#include "ProcHeaders.h"
-
-int ArgcCheck(const int argc);
-int ReadCode(SPU_t* SPU, const char* file_name);
-int SPU_Ctor (SPU_t* SPU, const char* file_name);
-int SPU_Dtor (SPU_t* SPU);
-
-int main(const int argc, const char** argv)
-{
-    if (ArgcCheck(argc) != 0) return -1;
-
-    SPU_t SPU = {};
-
-    if (SPU_Ctor(&SPU, argv[1]) != 0) {
-        SPU_Dtor(&SPU);
-        return -1;
-    }
-
-    if (RunCode(&SPU) != 0) {
-        SPU_Dtor(&SPU);
-        return -1;
-    }
-
-    return 0;
-}
-
-int ArgcCheck(const int argc)
-{
-    if (argc < 2) {
-        fprintf(stderr, "Enter name of file to read\n");
-        return -1;
-    }
-
-    return 0;
-}
-
-int SPU_Ctor (SPU_t* SPU, const char* file_name)
-{
-    SPU->ip = 0;
-
-    if (StackCtor(&SPU->stack) != 0) return -1;
-
-    if (ReadCode(SPU, file_name) != 0) return -1;
-
-    return 0;
-}
-
-int ReadCode(SPU_t* SPU, const char* file_name)
-{
-    FILE* code_ptr = fopen(file_name, "r");
-    if (code_ptr == NULL) {
-        return -1;
-    }
-
-    int size = 0;
-    fscanf(code_ptr, "%d", &size);
-
-    SPU->code = (int*) calloc(size, sizeof(int));
-
-    for (int i = 0; i < size; ++i) {
-        fscanf(code_ptr, "%x", &SPU->code[i]);
-    }
-
-    return 0;
-}
+#include "CodeRunning.h"
 
 int RunCode(SPU_t* SPU)
 {
     assert(SPU);
 
     while (true) {
+        //StackDump(&SPU->stack);
         switch(SPU->code[SPU->ip] & CMD_MASK)
         {
             case CMD_PUSH:
@@ -106,6 +41,11 @@ int RunCode(SPU_t* SPU)
             case CMD_OUT:
             {
                 DoOut(SPU);
+                break;
+            }
+            case CMD_IN:
+            {
+                if (DoIn(SPU) != 0) return -1;
                 break;
             }
             case CMD_JMP:
@@ -185,7 +125,7 @@ int DoSub (SPU_t* SPU)
     elem_t a = StackPop(&SPU->stack);
     elem_t b = StackPop(&SPU->stack);
 
-    StackPush(&SPU->stack, a-b);
+    StackPush(&SPU->stack, b-a);
 
     (SPU->ip)++;
 
@@ -210,7 +150,7 @@ int DoDiv(SPU_t* SPU)
     elem_t a = StackPop(&SPU->stack);
     elem_t b = StackPop(&SPU->stack);
 
-    StackPush(&SPU->stack, a/b);
+    StackPush(&SPU->stack, b/a);
 
     (SPU->ip)++;
 
@@ -221,7 +161,26 @@ int DoOut(SPU_t* SPU)
 {
     SPU_VERIFY
 
-    printf("%d\n", StackPop(&SPU->stack));
+    printf("Out: %d\n", StackPop(&SPU->stack));
+
+    (SPU->ip)++;
+
+    return 0;
+}
+
+int DoIn(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    printf("Enter element to push:\n");
+
+    elem_t elem = 0;
+    if (scanf("%d", &elem) != 1) {
+        fprintf(stderr, "Error: no right type element read\n");
+        return -1;
+    }
+
+    StackPush(&SPU->stack, elem);
 
     (SPU->ip)++;
 
@@ -241,22 +200,11 @@ int DoJb(SPU_t* SPU)
 {
     SPU_VERIFY
 
-    if (SPU->regs[SPU->code[SPU->ip+2]] < SPU->code[SPU->ip+3]) DoJmp(SPU);
-    else SPU->ip += 4;
+    elem_t elem1 = StackPop(&SPU->stack);
+    elem_t elem2 = StackPop(&SPU->stack);
 
-    return 0;
-}
-
-int SPU_Dtor (SPU_t* SPU)
-{
-    SPU_VERIFY
-
-    StackDtor(&SPU->stack);
-
-    free(SPU->code);
-    SPU->code = NULL;
-
-    SPU->ip = 0;
+    if (elem1 > elem2) DoJmp(SPU);
+    else SPU->ip += 2;
 
     return 0;
 }

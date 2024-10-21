@@ -2,8 +2,19 @@
 #define __PROC_GLOBALS_H__
 
 #include <stdlib.h>
+#include "StackGlobals.h"
 
 typedef int elem_t;
+
+struct Code_header
+{
+    int signature;
+    int asm_version;
+};
+
+const int SIGNATURE   = *((const int*) "LkzX");
+const int ASM_VERSION = 1;
+const int MAX_STRING_LENGTH = 52;
 
 #define SPU_VERIFY             \
     assert(SPU);               \
@@ -19,34 +30,35 @@ const int REGS_MODE   = 0x20;
 
 enum CMD_CODES
 {
-    CMD_PUSH = 0x01,
-    CMD_POP  = 0x02,
-    CMD_ADD  = 0x03,
-    CMD_SUB  = 0x04,
-    CMD_MUL  = 0x05,
-    CMD_DIV  = 0x06,
-    CMD_OUT  = 0x07,
-    CMD_IN   = 0x08,
-    CMD_JMP  = 0x09,
-    CMD_JB   = 0x0A,
-    CMD_HLT  = 0x0B
+    CMD_PUSH =  0x01,
+    CMD_POP  =  0x02,
+    CMD_ADD  =  0x03,
+    CMD_SUB  =  0x04,
+    CMD_MUL  =  0x05,
+    CMD_DIV  =  0x06,
+    CMD_OUT  =  0x07,
+    CMD_IN   =  0x08,
+    CMD_JMP  =  0x09,
+    CMD_JB   =  0x0A,
+    CMD_HLT  =  0x00
 };
 
 enum registers
 {
+    NULL_REG = 0x00,
     AX = 1,
-    BX = 2,
-    CX = 3,
-    DX = 4
+    BX = 0x02,
+    CX = 0x03,
+    DX = 0x04
 };
 
-const int REGS_NUM = 5;
+const int NREGS = 5;
 
 struct SPU_t
 {
     int     ip;
     elem_t* code;
-    elem_t  regs[REGS_NUM];
+    elem_t  regs[NREGS];
     Stk_t   stack;
 };
 
