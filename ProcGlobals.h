@@ -46,7 +46,8 @@ enum CMD_CODES
 enum registers
 {
     NULL_REG = 0x00,
-    AX = 1,
+
+    AX = 0x01,
     BX = 0x02,
     CX = 0x03,
     DX = 0x04
@@ -75,6 +76,7 @@ struct Label
 };
 
 const int LABELS_ARR_SIZE = 10;
+const int RAM_SIZE        = 100;
 
 struct ASM_t
 {

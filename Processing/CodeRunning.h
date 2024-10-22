@@ -10,8 +10,9 @@
 
 int RunCode (SPU_t* SPU);
 
-int DoPush  (SPU_t* SPU);
-int DoPop   (SPU_t* SPU);
+int  DoPush (SPU_t* SPU);
+int  DoPop  (SPU_t* SPU);
+int* GetArg (SPU_t* SPU);
 
 int DoAdd   (SPU_t* SPU);
 int DoSub   (SPU_t* SPU);

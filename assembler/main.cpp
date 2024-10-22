@@ -12,7 +12,6 @@ int main(const int argc, const char** argv)
 
     ASM_t ASM = {};
 
-
     if (ASMCtor(&ASM, argv[1]) != 0) return -1;
 
     if (ReadAsmCode(&ASM) != 0) return -1;

@@ -69,30 +69,42 @@ int RunCode(SPU_t* SPU)
     }
 }
 
+int* GetArg(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    int opCode = SPU->code[SPU->ip];
+    (SPU->ip)++;
+
+    int* argValue = 0;
+
+    if (opCode & NUMBER_MODE) argValue = &SPU->code[(SPU->ip)++];
+    if (opCode & REGS_MODE || opCode & CMD_POP) {
+        if (argValue) {
+            (SPU->regs)[0] = *argValue + SPU->regs[SPU->code[(SPU->ip)++]];
+            argValue = &(SPU->regs)[0];
+        } else {
+            argValue = &SPU->regs[SPU->code[(SPU->ip)++]];
+        }
+    }
+
+    if (!argValue) {
+        fprintf(stderr, "Unknown command: %d!\n", SPU->code[SPU->ip - 1]);
+    }
+
+    return argValue;
+}
+
 int DoPush (SPU_t* SPU)
 {
     SPU_VERIFY
 
-    switch(SPU->code[SPU->ip] & MODE_MASK)
-    {
-        case NUMBER_MODE:
-        {
-            StackPush(&SPU->stack, SPU->code[SPU->ip+1]);
-            SPU->ip += 2;
-            break;
-        }
-        case REGS_MODE:
-        {
-            StackPush(&SPU->stack, SPU->regs[SPU->code[SPU->ip+1]]);
-            SPU->ip += 2;
-            break;
-        }
-        default:
-        {
-            fprintf(stderr, "Unknown mode of \"push\" command: %x\n", SPU->code[SPU->ip]);
-            return -1;
-        }
-    }
+    int* arg = GetArg(SPU);
+
+    if (!arg) return -1;
+
+    StackPush(&SPU->stack, *arg);
+
     return 0;
 }
 
@@ -100,9 +112,11 @@ int DoPop (SPU_t* SPU)
 {
     SPU_VERIFY
 
-    SPU->regs[SPU->code[SPU->ip+1]] = StackPop(&SPU->stack);
+    int* arg = GetArg(SPU);
 
-    SPU->ip += 2;
+    if (!arg) return -1;
+
+    *arg = StackPop(&SPU->stack);
 
     return 0;
 }

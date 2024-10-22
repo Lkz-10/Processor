@@ -12,7 +12,7 @@
 
 int ReadAsmCode(ASM_t* ASM);
 int GetLabel (ASM_t* ASM, const char* label_name);
-registers GetRegister(ASM_t* ASM);
+registers GetRegister(const char* arg_reg);
 int GetPush(ASM_t* ASM);
 int GetPop(ASM_t* ASM);
 int GetJmp(ASM_t* ASM, int jmp_mode);

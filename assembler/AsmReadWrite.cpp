@@ -5,28 +5,11 @@ int ReadAsmCode(ASM_t* ASM)
     if (ASM_verify(ASM, FILE_VERIFY) != 0) return -1;
 
     char cmd[MAX_STRING_LENGTH] = {};
-    //char* cmd = ;
 
     while (fscanf(ASM->cmd_ptr, "%s", cmd) != EOF) {
-        // printf("Read command: \"%s\"\n", cmd);
-        // printf("Address of ':' : %p\n", strchr(cmd, ':'));
-
-        // printf("Labels:\n");
-        // for (int i = 0; i < ASM->nLabels; ++i) {
-        //     printf("    [%d]: \"%s\"\n", i, (ASM->labels[i]).name);
-        // }
 
         if (strchr(cmd, ':') != NULL) {
-            //printf("Label \"%s\" found!\n", cmd);
-
             if (GetLabel(ASM, cmd) != 0) return -1;
-
-            //printf("Label \"%s\" got!\n", cmd);
-            //memset(cmd, '0', MAX_STRING_LENGTH);
-            //strcpy(cmd, "0000000000000");
-
-            // printf("cmd: \"%s\"\n", cmd);
-            // printf("Address of ':' : %p\n", strchr(cmd, ':'));
             continue;
         }
 
@@ -140,13 +123,10 @@ int GetLabel (ASM_t* ASM, const char* label_name)
     return 0;
 }
 
-registers GetRegister(ASM_t* ASM)
+registers GetRegister(const char* arg_reg)
 {
-    if (ASM_verify(ASM, FILE_VERIFY) != 0) return NULL_REG;
+    if (!arg_reg) return NULL_REG;
 
-    char arg_reg[MAX_STRING_LENGTH] = {};
-
-    fscanf(ASM->cmd_ptr, "%s", arg_reg);
     //printf("Read register: %s\n", arg_reg);
 
     if (stricmp(arg_reg, "AX") == 0) return AX;
@@ -172,9 +152,36 @@ int GetPush(ASM_t* ASM)
         return 0;
     }
 
-    int reg_num = GetRegister(ASM);
+    char arg_str[MAX_STRING_LENGTH] = {};
 
-    if (reg_num == -1) return -1;
+    if (fscanf(ASM->cmd_ptr, "%s", arg_str) == 0) {
+        fprintf(stderr, "Error while reading push() argument!\n");
+        return -1;
+    }
+
+    char* plus_ptr = strchr(arg_str, '+');
+
+    if (plus_ptr != NULL) {
+        *plus_ptr = '\0';
+
+        char arg_reg[MAX_STRING_LENGTH] = {};
+
+        sscanf(arg_str, "%s", arg_reg);
+        sscanf(plus_ptr + 1, "%d", &arg_num);
+
+        StackPush(&ASM->code, CMD_PUSH | NUMBER_MODE | REGS_MODE);
+        StackPush(&ASM->code, arg_num);
+        StackPush(&ASM->code, GetRegister(arg_reg));
+
+        return 0;
+    }
+
+
+    //fscanf(ASM->cmd_ptr, "%s", arg_reg);
+
+    int reg_num = GetRegister(arg_str);
+
+    if (reg_num == NULL_REG) return -1;
 
     StackPush(&ASM->code, CMD_PUSH | REGS_MODE);
     StackPush(&ASM->code, reg_num);
@@ -186,10 +193,14 @@ int GetPop(ASM_t* ASM)
 {
     if (ASM_verify(ASM, FILE_VERIFY) != 0) return -1;
 
-    int reg_num = GetRegister(ASM);
+    char arg_reg[MAX_STRING_LENGTH] = {};
+
+    fscanf(ASM->cmd_ptr, "%s", arg_reg);
+
+    int reg_num = GetRegister(arg_reg);
     //printf("reg_num got, = %x\n", reg_num);
 
-    if (reg_num == -1) return -1;
+    if (reg_num == NULL_REG) return -1;
 
     StackPush(&ASM->code, CMD_POP);
     StackPush(&ASM->code, reg_num);
