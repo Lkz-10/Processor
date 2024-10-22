@@ -92,16 +92,4 @@ struct Stk_t
     ON_BIRDS(canary_t canary2;)
 };
 
-enum verify_modes
-{
-    NO_FILE_VERIFY = 0,
-    FILE_VERIFY    = 1
-};
-
-struct ASM_t
-{
-    Stk_t   code;
-    FILE*   cmd_ptr;
-};
-
 #endif

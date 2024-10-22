@@ -22,6 +22,12 @@ int ASMDtor(ASM_t* ASM)
 {
     assert(ASM);
 
+    for (int i = 0; i < ASM->nLabels; ++i) {
+        free((ASM->labels[i]).name);
+        (ASM->labels[i]).name = NULL;
+        (ASM->labels[i]).address = -2;
+    }
+
     free(ASM->code.data);
     ASM->code.data = NULL;
 

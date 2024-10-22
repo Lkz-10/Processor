@@ -17,6 +17,17 @@ int main(const int argc, const char** argv)
 
     if (ReadAsmCode(&ASM) != 0) return -1;
 
+    rewind(ASM.cmd_ptr);
+    //printf("label address: %d\n", (ASM.labels[0]).address);
+
+    ASM.code.sz = 0;
+
+    if (ReadAsmCode(&ASM) != 0) return -1;
+
+    fclose(ASM.cmd_ptr);
+
+    //printf("label address: %d\n", (ASM.labels[0]).address);
+
     if (PrintCode(&ASM, argv[2]) != 0) return -1;
 
     ASMDtor(&ASM);

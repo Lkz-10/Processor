@@ -62,4 +62,26 @@ struct SPU_t
     Stk_t   stack;
 };
 
+enum verify_modes
+{
+    NO_FILE_VERIFY = 0,
+    FILE_VERIFY    = 1
+};
+
+struct Label
+{
+    char* name;
+    int   address = -1;
+};
+
+const int LABELS_ARR_SIZE = 10;
+
+struct ASM_t
+{
+    Stk_t   code;
+    Label   labels[LABELS_ARR_SIZE] = {};
+    int     nLabels                 = 0;
+    FILE*   cmd_ptr;
+};
+
 #endif
