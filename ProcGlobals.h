@@ -12,8 +12,8 @@ struct Code_header
     int asm_version;
 };
 
-const int SIGNATURE   = *((const int*) "LkzX");
-const int ASM_VERSION = 1;
+const int SIGNATURE         = *((const int*) "LkzX");
+const int ASM_VERSION       = 1;
 const int MAX_STRING_LENGTH = 52;
 
 #define SPU_VERIFY             \
@@ -25,8 +25,12 @@ const int MAX_STRING_LENGTH = 52;
 const int CMD_MASK    = 0x0F;
 const int MODE_MASK   = 0xF0;
 
-const int NUMBER_MODE = 0x10;
-const int REGS_MODE   = 0x20;
+enum CMD_MODES
+{
+    NUMBER_MODE = 0x10,
+    REGS_MODE   = 0x20,
+    RAM_MODE    = 0x40
+};
 
 enum CMD_CODES
 {
@@ -53,13 +57,15 @@ enum registers
     DX = 0x04
 };
 
-const int NREGS = 5;
+const int NREGS    = 5;
+const int RAM_SIZE = 100;
 
 struct SPU_t
 {
     int     ip;
     elem_t* code;
-    elem_t  regs[NREGS];
+    elem_t  regs[NREGS]    = {};
+    elem_t  RAM [RAM_SIZE] = {};
     Stk_t   stack;
 };
 
@@ -76,7 +82,6 @@ struct Label
 };
 
 const int LABELS_ARR_SIZE = 10;
-const int RAM_SIZE        = 100;
 
 struct ASM_t
 {

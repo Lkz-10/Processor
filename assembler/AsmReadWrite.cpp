@@ -142,11 +142,12 @@ int GetPush(ASM_t* ASM)
 {
     if (ASM_verify(ASM, FILE_VERIFY) != 0) return -1;
 
+    int cmd_ret = CMD_PUSH;
     int arg_num = 0;
 
     if (fscanf(ASM->cmd_ptr, "%d", &arg_num) == 1) {
 
-        StackPush(&ASM->code, CMD_PUSH | NUMBER_MODE);
+        StackPush(&ASM->code, cmd_ret | NUMBER_MODE);
         StackPush(&ASM->code, arg_num);
 
         return 0;
@@ -159,31 +160,54 @@ int GetPush(ASM_t* ASM)
         return -1;
     }
 
+    if (strchr(arg_str, '[') != NULL){
+        char* closing_bracket_ptr = strchr(arg_str, ']');
+
+        if (closing_bracket_ptr == NULL) {
+            fprintf(stderr, "Syntax error: no closing bracket: \"%s\"\n", arg_str);
+            return -1;
+        }
+        *closing_bracket_ptr = '\0';
+
+        cmd_ret = cmd_ret | RAM_MODE;
+    }
+
     char* plus_ptr = strchr(arg_str, '+');
 
     if (plus_ptr != NULL) {
+        cmd_ret = cmd_ret | NUMBER_MODE | REGS_MODE;
+
         *plus_ptr = '\0';
 
         char arg_reg[MAX_STRING_LENGTH] = {};
 
-        sscanf(arg_str, "%s", arg_reg);
+        sscanf(arg_str + ((cmd_ret & RAM_MODE) != 0), "%s", arg_reg);
         sscanf(plus_ptr + 1, "%d", &arg_num);
 
-        StackPush(&ASM->code, CMD_PUSH | NUMBER_MODE | REGS_MODE);
+        StackPush(&ASM->code, cmd_ret);
         StackPush(&ASM->code, arg_num);
         StackPush(&ASM->code, GetRegister(arg_reg));
 
         return 0;
     }
 
+    if (sscanf(arg_str + ((cmd_ret & RAM_MODE) != 0), "%d", &arg_num) == 1) {
 
-    //fscanf(ASM->cmd_ptr, "%s", arg_reg);
+        cmd_ret = cmd_ret | NUMBER_MODE;
 
-    int reg_num = GetRegister(arg_str);
+        StackPush(&ASM->code, cmd_ret);
+        StackPush(&ASM->code, arg_num);
+
+        return 0;
+    }
+
+    cmd_ret = cmd_ret | REGS_MODE;
+
+    int reg_num = GetRegister(arg_str + ((cmd_ret & RAM_MODE) != 0));
 
     if (reg_num == NULL_REG) return -1;
 
-    StackPush(&ASM->code, CMD_PUSH | REGS_MODE);
+    StackPush(&ASM->code, cmd_ret);
     StackPush(&ASM->code, reg_num);
 
     return 0;
@@ -193,16 +217,76 @@ int GetPop(ASM_t* ASM)
 {
     if (ASM_verify(ASM, FILE_VERIFY) != 0) return -1;
 
-    char arg_reg[MAX_STRING_LENGTH] = {};
+    char arg_str[MAX_STRING_LENGTH] = {};
+    int cmd_ret = CMD_POP;
 
-    fscanf(ASM->cmd_ptr, "%s", arg_reg);
+    fscanf(ASM->cmd_ptr, "%s", arg_str);
 
-    int reg_num = GetRegister(arg_reg);
+    if (strchr(arg_str, '[') == NULL) {
+        cmd_ret = cmd_ret | REGS_MODE;
+    } else {
+        cmd_ret = cmd_ret | RAM_MODE;
+
+        char* closing_bracket_ptr = strchr(arg_str, ']');
+
+        if (closing_bracket_ptr == NULL) {
+            fprintf(stderr, "Syntax error: no closing bracket: \"%s\"\n", arg_str);
+            return -1;
+        }
+
+        *closing_bracket_ptr = '\0';
+    }
+
+    int arg = 0;
+
+    if ((cmd_ret & RAM_MODE) == 0) {
+        arg = GetRegister(arg_str);
+
+        if (arg == NULL_REG) return -1;
+
+        StackPush(&ASM->code, cmd_ret);
+        StackPush(&ASM->code, arg);
+
+        return 0;
+    }
+
+    if (sscanf(arg_str + 1, "%d", &arg) == 1) {
+        cmd_ret = cmd_ret | NUMBER_MODE;
+
+        StackPush(&ASM->code, cmd_ret);
+        StackPush(&ASM->code, arg);
+
+        return 0;
+    }
+
+    cmd_ret = cmd_ret | REGS_MODE;
+
+    char* plus_ptr = strchr(arg_str, '+');
+
+    if (plus_ptr == NULL) {
+        arg = GetRegister(arg_str + 1);
+
+        if (arg == NULL_REG) return -1;
+
+        StackPush(&ASM->code, cmd_ret);
+        StackPush(&ASM->code, arg);
+
+        return 0;
+    }
+
+    cmd_ret = cmd_ret | NUMBER_MODE;
+
+    *plus_ptr = '\0';
+
+    int reg_num = GetRegister(arg_str + 1);
     //printf("reg_num got, = %x\n", reg_num);
 
     if (reg_num == NULL_REG) return -1;
 
-    StackPush(&ASM->code, CMD_POP);
+    sscanf(plus_ptr + 1, "%d", &arg);
+
+    StackPush(&ASM->code, cmd_ret);
+    StackPush(&ASM->code, arg);
     StackPush(&ASM->code, reg_num);
 
     return 0;

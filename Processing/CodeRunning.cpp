@@ -79,13 +79,16 @@ int* GetArg(SPU_t* SPU)
     int* argValue = 0;
 
     if (opCode & NUMBER_MODE) argValue = &SPU->code[(SPU->ip)++];
-    if (opCode & REGS_MODE || opCode & CMD_POP) {
+    if (opCode & REGS_MODE) {
         if (argValue) {
             (SPU->regs)[0] = *argValue + SPU->regs[SPU->code[(SPU->ip)++]];
             argValue = &(SPU->regs)[0];
         } else {
             argValue = &SPU->regs[SPU->code[(SPU->ip)++]];
         }
+    }
+    if (opCode & RAM_MODE) {
+        argValue = &SPU->RAM[*argValue];
     }
 
     if (!argValue) {
