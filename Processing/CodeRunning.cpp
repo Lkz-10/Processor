@@ -58,6 +58,11 @@ int RunCode(SPU_t* SPU)
                 DoJb(SPU);
                 break;
             }
+            case CMD_VIS:
+            {
+                DoVis(SPU);
+                break;
+            }
             case CMD_HLT:
             {
                 return 0;
@@ -222,6 +227,31 @@ int DoJb(SPU_t* SPU)
 
     if (elem1 > elem2) DoJmp(SPU);
     else SPU->ip += 2;
+
+    return 0;
+}
+
+int DoVis(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    for (int i = 0; i < RAM_SIZE / RAM_LINE_LENGTH; ++i)
+    {
+        for (int j = 0; j < RAM_LINE_LENGTH; ++j)
+        {
+            if ((SPU->RAM + i * RAM_LINE_LENGTH)[j] == 0)
+            {
+                printf(". ");
+            }
+            else
+            {
+                printf("* ");
+            }
+        }
+        printf("\n");
+    }
+
+    (SPU->ip)++;
 
     return 0;
 }

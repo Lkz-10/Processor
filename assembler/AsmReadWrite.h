@@ -15,6 +15,7 @@ int GetLabel (ASM_t* ASM, const char* label_name);
 registers GetRegister(const char* arg_reg);
 int GetPush(ASM_t* ASM);
 int GetPop(ASM_t* ASM);
+int RAMCheck (const char* arg_str, int* cmd_ret_ptr);
 int GetJmp(ASM_t* ASM, int jmp_mode);
 //int GetJb(ASM_t* ASM);
 int PrintCode(ASM_t* ASM, const char* file_name);

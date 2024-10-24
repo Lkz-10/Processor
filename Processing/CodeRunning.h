@@ -25,4 +25,6 @@ int DoIn    (SPU_t* SPU);
 int DoJmp   (SPU_t* SPU);
 int DoJb    (SPU_t* SPU);
 
+int DoVis   (SPU_t* SPU);
+
 #endif

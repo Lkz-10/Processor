@@ -44,6 +44,7 @@ enum CMD_CODES
     CMD_IN   =  0x08,
     CMD_JMP  =  0x09,
     CMD_JB   =  0x0A,
+    CMD_VIS  =  0x0B,
     CMD_HLT  =  0x00
 };
 
@@ -57,8 +58,9 @@ enum registers
     DX = 0x04
 };
 
-const int NREGS    = 5;
-const int RAM_SIZE = 100;
+const int NREGS           = 5;
+const int RAM_SIZE        = 100;
+const int RAM_LINE_LENGTH = 10;
 
 struct SPU_t
 {

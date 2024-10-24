@@ -77,12 +77,15 @@ int ReadAsmCode(ASM_t* ASM)
             }
             continue;
         }
+        if (stricmp(cmd, "vis") == 0) {
+            StackPush(&ASM->code, CMD_VIS);
+            continue;
+        }
         if (stricmp(cmd, "hlt") == 0) {
             StackPush(&ASM->code, CMD_HLT);
             continue;
         }
         fprintf(stderr, "Error: command %s does not exist!\n", cmd);
-        //fprintf(stderr, "code size: %lld\n", ASM->code.sz);
 
         fclose(ASM->cmd_ptr);
         ASM->cmd_ptr = NULL;
@@ -102,23 +105,11 @@ int GetLabel (ASM_t* ASM, const char* label_name)
         return -1;
     }
 
-    // printf("\"%s\" is ready to go!\n", label_name);
-    // fprintf(stderr, "name = %p\n", (ASM->labels[ASM->nLabels]).name);
-
     (ASM->labels[ASM->nLabels]).name = strdup(label_name);
-    //fprintf(stderr, "name = %p\n", (ASM->labels[ASM->nLabels]).name);
-
-    //printf("\"%s\" is copied!\n", (ASM->labels[ASM->nLabels]).name);
 
     (ASM->labels[ASM->nLabels]).address = (int) (ASM->code).sz;
 
-    //printf("\"%s\" address (%d) is copied!\n", label_name, (ASM->labels[ASM->nLabels]).address);
-
     (ASM->nLabels)++;
-
-    // for (int i = 0; i < ASM->nLabels; ++i) {
-    //     printf("    [%d]: \"%s\"\n", i, (ASM->labels[i]).name);
-    // }
 
     return 0;
 }
@@ -160,16 +151,8 @@ int GetPush(ASM_t* ASM)
         return -1;
     }
 
-    if (strchr(arg_str, '[') != NULL){
-        char* closing_bracket_ptr = strchr(arg_str, ']');
-
-        if (closing_bracket_ptr == NULL) {
-            fprintf(stderr, "Syntax error: no closing bracket: \"%s\"\n", arg_str);
-            return -1;
-        }
-        *closing_bracket_ptr = '\0';
-
-        cmd_ret = cmd_ret | RAM_MODE;
+    if (strchr(arg_str, '[') != NULL && RAMCheck(arg_str, &cmd_ret) != 0){
+        return -1;
     }
 
     char* plus_ptr = strchr(arg_str, '+');
@@ -220,21 +203,15 @@ int GetPop(ASM_t* ASM)
     char arg_str[MAX_STRING_LENGTH] = {};
     int cmd_ret = CMD_POP;
 
-    fscanf(ASM->cmd_ptr, "%s", arg_str);
+    if (fscanf(ASM->cmd_ptr, "%s", arg_str) == 0) {
+        fprintf(stderr, "Error while reading pop() argument!\n");
+        return -1;
+    }
 
     if (strchr(arg_str, '[') == NULL) {
         cmd_ret = cmd_ret | REGS_MODE;
-    } else {
-        cmd_ret = cmd_ret | RAM_MODE;
-
-        char* closing_bracket_ptr = strchr(arg_str, ']');
-
-        if (closing_bracket_ptr == NULL) {
-            fprintf(stderr, "Syntax error: no closing bracket: \"%s\"\n", arg_str);
-            return -1;
-        }
-
-        *closing_bracket_ptr = '\0';
+    } else if (RAMCheck(arg_str, &cmd_ret) != 0) {
+        return -1;
     }
 
     int arg = 0;
@@ -292,53 +269,46 @@ int GetPop(ASM_t* ASM)
     return 0;
 }
 
+int RAMCheck (const char* arg_str, int* cmd_ret_ptr)
+{
+    assert(arg_str);
+    assert(cmd_ret_ptr);
+
+    char* closing_bracket_ptr = strchr(arg_str, ']');
+
+    if (closing_bracket_ptr == NULL) {
+        fprintf(stderr, "Syntax error: no closing bracket: \"%s\"\n", arg_str);
+        return -1;
+    }
+
+    *closing_bracket_ptr = '\0';
+
+    *cmd_ret_ptr = (*cmd_ret_ptr) | RAM_MODE;
+
+    return 0;
+}
+
 int GetJmp(ASM_t* ASM, int jmp_mode)
 {
     if (ASM_verify(ASM, FILE_VERIFY) != 0) return -1;
 
-    // printf("Labels:\n");
-    // for (int i = 0; i < ASM->nLabels; ++i) {
-    //     printf("    [%d]: %s\n", i, (ASM->labels[i]).name);
-    // }
-
     char label_name[MAX_STRING_LENGTH] = {};
     fscanf(ASM->cmd_ptr, "%s", label_name);
-
-    //printf("\"%s\" label as argument for jump read!\n", label_name);
-
 
     int arg_jmp = -1;
 
     for (int i = 0; i < ASM->nLabels; ++i) {
-        //printf("In for!\n   label name: \"%s\"\n    labels[%d]: \"%s\"\n", label_name, i, (ASM->labels[i]).name);
         if (strcmp((ASM->labels[i]).name, label_name) == 0) {
             arg_jmp = (ASM->labels[i]).address;
-            //printf("jmp arg is \"%s\", address: %d!\n", label_name, arg_jmp);
             break;
         }
     }
-    //printf("Stack push: %d, %d!\n", jmp_mode, arg_jmp);
 
     StackPush(&ASM->code, jmp_mode);
     StackPush(&ASM->code, arg_jmp);
 
     return 0;
 }
-
-// int GetJb(ASM_t* ASM)
-// {
-//     if (ASM_verify(ASM, FILE_VERIFY) != 0) return -1;
-//
-//     char label_name[MAX_STRING_LENGTH] = {};
-//     fscanf(ASM->cmd_ptr, "%s", label_name);
-//
-//     int arg_jb = -1;
-//
-//     StackPush(&ASM->code, CMD_JB);
-//     StackPush(&ASM->code, arg_jb);
-//
-//     return 0;
-// }
 
 int PrintCode(ASM_t* ASM, const char* file_name)
 {
