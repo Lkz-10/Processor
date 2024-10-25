@@ -2,7 +2,7 @@
 
 int ArgcCheck(const int argc)
 {
-    if (argc < 2) {
+    if (argc < 3) {
         fprintf(stderr, "Enter name of file to read\n");
         return -1;
     }
@@ -55,12 +55,11 @@ int ReadHeader(FILE* code_ptr)
 
 int ReadCode(SPU_t* SPU, FILE* code_ptr)
 {
-    int size = 0;
-    fscanf(code_ptr, "%d", &size);
+    fscanf(code_ptr, "%d", &SPU->code_size);
 
-    SPU->code = (int*) calloc(size, sizeof(int));
+    SPU->code = (int*) calloc(SPU->code_size, sizeof(int));
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < SPU->code_size; ++i) {
         fscanf(code_ptr, "%x", &SPU->code[i]);
     }
 

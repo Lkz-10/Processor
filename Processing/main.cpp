@@ -13,7 +13,7 @@ int main(const int argc, const char** argv)
         return -1;
     }
 
-    if (RunCode(&SPU) != 0) {
+    if (RunCode(&SPU, argv[2]) != 0) {
         SPU_Dtor(&SPU);
         return -1;
     }

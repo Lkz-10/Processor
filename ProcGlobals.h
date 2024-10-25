@@ -20,6 +20,7 @@ const int MAX_STRING_LENGTH = 52;
     assert(SPU);               \
     assert(SPU->code);         \
     assert(SPU->stack.data);   \
+    assert(SPU->RAM);          \
     assert(SPU->regs);
 
 const int CMD_MASK    = 0x0F;
@@ -45,6 +46,7 @@ enum CMD_CODES
     CMD_JMP  =  0x09,
     CMD_JB   =  0x0A,
     CMD_VIS  =  0x0B,
+    CMD_DUMP =  0x0C,
     CMD_HLT  =  0x00
 };
 
@@ -65,6 +67,7 @@ const int RAM_LINE_LENGTH = 10;
 struct SPU_t
 {
     int     ip;
+    int     code_size      = 0;
     elem_t* code;
     elem_t  regs[NREGS]    = {};
     elem_t  RAM [RAM_SIZE] = {};

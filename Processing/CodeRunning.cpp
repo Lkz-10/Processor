@@ -1,11 +1,13 @@
 #include "CodeRunning.h"
 
-int RunCode(SPU_t* SPU)
+int RunCode(SPU_t* SPU, const char* file_out_name)
 {
     assert(SPU);
 
-    while (true) {
-        //StackDump(&SPU->stack);
+    FILE* file_out_ptr = fopen(file_out_name, "w");
+
+    while (true)
+    {
         switch(SPU->code[SPU->ip] & CMD_MASK)
         {
             case CMD_PUSH:
@@ -40,7 +42,7 @@ int RunCode(SPU_t* SPU)
             }
             case CMD_OUT:
             {
-                DoOut(SPU);
+                DoOut(SPU, file_out_ptr);
                 break;
             }
             case CMD_IN:
@@ -60,11 +62,19 @@ int RunCode(SPU_t* SPU)
             }
             case CMD_VIS:
             {
-                DoVis(SPU);
+                DoVis(SPU, file_out_ptr);
+                break;
+            }
+            case CMD_DUMP:
+            {
+                DoDump(SPU, file_out_ptr);
                 break;
             }
             case CMD_HLT:
             {
+                fclose(file_out_ptr);
+                file_out_ptr = NULL;
+
                 return 0;
             }
             default:
@@ -179,11 +189,12 @@ int DoDiv(SPU_t* SPU)
     return 0;
 }
 
-int DoOut(SPU_t* SPU)
+int DoOut(SPU_t* SPU, FILE* file_ptr)
 {
     SPU_VERIFY
+    assert(file_ptr);
 
-    printf("Out: %d\n", StackPop(&SPU->stack));
+    fprintf(file_ptr, "%d\n", StackPop(&SPU->stack));
 
     (SPU->ip)++;
 
@@ -198,7 +209,7 @@ int DoIn(SPU_t* SPU)
 
     elem_t elem = 0;
     if (scanf("%d", &elem) != 1) {
-        fprintf(stderr, "Error: no right type element read\n");
+        fprintf(stderr, "Error: no right type element read, only left one found\n");
         return -1;
     }
 
@@ -231,7 +242,7 @@ int DoJb(SPU_t* SPU)
     return 0;
 }
 
-int DoVis(SPU_t* SPU)
+int DoVis(SPU_t* SPU, FILE* file_ptr)
 {
     SPU_VERIFY
 
@@ -241,15 +252,65 @@ int DoVis(SPU_t* SPU)
         {
             if ((SPU->RAM + i * RAM_LINE_LENGTH)[j] == 0)
             {
-                printf(". ");
+                fprintf(file_ptr, ". ");
             }
             else
             {
-                printf("* ");
+                fprintf(file_ptr, "* ");
             }
         }
-        printf("\n");
+        fprintf(file_ptr, "\n");
     }
+
+    (SPU->ip)++;
+
+    return 0;
+}
+
+int DoDump (SPU_t* SPU, FILE* file_ptr)
+{
+    SPU_VERIFY
+
+    fprintf(file_ptr, "SPU[%p]:\n{\n", SPU);
+
+    fprintf(file_ptr, "Code size = %d, ip = %d\n\nCode[%p]:\n", SPU->code_size, SPU->ip, SPU->code);
+    for (int i = 0; i < SPU->code_size; ++i)
+    {
+        fprintf(file_ptr, "%4d ", SPU->code[i]);
+    }
+    fprintf(file_ptr, "\n");
+    for (int i = 0; i < SPU->ip; ++i)
+    {
+        fprintf(file_ptr, "     ");
+    }
+    fprintf(file_ptr, "  ^\n");
+
+    fprintf(file_ptr, "Stack[%p]:\n{\n", &SPU->stack);
+    fprintf(file_ptr, "  capacity: %lld, size: %lld\n\n  Data[%p]:\n  ",
+            SPU->stack.capacity, SPU->stack.sz, SPU->stack.data);
+    for (size_t i = 0; i < SPU->stack.sz; ++i)
+    {
+        fprintf(file_ptr, "%4d ", SPU->stack.data[i]);
+    }
+    fprintf(file_ptr, "\n}\n\n");
+
+    fprintf(file_ptr, "Registers[%p]:\n", SPU->regs);
+    fprintf(file_ptr, "  AX: %4d\n", SPU->regs[AX]);
+    fprintf(file_ptr, "  BX: %4d\n", SPU->regs[BX]);
+    fprintf(file_ptr, "  CX: %4d\n", SPU->regs[CX]);
+    fprintf(file_ptr, "  DX: %4d\n", SPU->regs[DX]);
+    fprintf(file_ptr, "\n");
+
+    fprintf(file_ptr, "RAM[%p]:\n", SPU->RAM);
+    for (int i = 0; i < RAM_SIZE / RAM_LINE_LENGTH; ++i)
+    {
+        for (int j = 0; j < RAM_LINE_LENGTH; ++j)
+        {
+            fprintf(file_ptr, "%4d ", (SPU->RAM + i * RAM_LINE_LENGTH)[j]);
+        }
+        fprintf(file_ptr, "\n");
+    }
+    fprintf(file_ptr, "}\n");
 
     (SPU->ip)++;
 

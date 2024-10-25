@@ -12,7 +12,6 @@ int ReadAsmCode(ASM_t* ASM)
             if (GetLabel(ASM, cmd) != 0) return -1;
             continue;
         }
-
         if (stricmp(cmd, "push") == 0) {
             if (GetPush(ASM) != 0) {
                 fclose(ASM->cmd_ptr);
@@ -79,6 +78,10 @@ int ReadAsmCode(ASM_t* ASM)
         }
         if (stricmp(cmd, "vis") == 0) {
             StackPush(&ASM->code, CMD_VIS);
+            continue;
+        }
+        if (stricmp(cmd, "dump") == 0) {
+            StackPush(&ASM->code, CMD_DUMP);
             continue;
         }
         if (stricmp(cmd, "hlt") == 0) {
