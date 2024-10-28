@@ -8,6 +8,13 @@ int ReadAsmCode(ASM_t* ASM)
 
     while (fscanf(ASM->cmd_ptr, "%s", cmd) != EOF) {
 
+        if (strchr(cmd, ';') != NULL) {
+            if (strchr(cmd, '\n') != NULL) continue;
+
+            fgets(cmd, MAX_STRING_LENGTH, ASM->cmd_ptr);
+            continue;
+        }
+
         if (strchr(cmd, ':') != NULL) {
             if (GetLabel(ASM, cmd) != 0) return -1;
             continue;
@@ -50,6 +57,14 @@ int ReadAsmCode(ASM_t* ASM)
             StackPush(&ASM->code, CMD_DIV);
             continue;
         }
+        if (stricmp(cmd, "sqr") == 0) {
+            StackPush(&ASM->code, CMD_SQR);
+            continue;
+        }
+        if (stricmp(cmd, "sqrt") == 0) {
+            StackPush(&ASM->code, CMD_SQRT);
+            continue;
+        }
         if (stricmp(cmd, "out") == 0) {
             StackPush(&ASM->code, CMD_OUT);
             continue;
@@ -69,6 +84,15 @@ int ReadAsmCode(ASM_t* ASM)
         }
         if (stricmp(cmd, "jb") == 0) {
             if (GetJmp(ASM, CMD_JB) != 0) {
+                fclose(ASM->cmd_ptr);
+                ASM->cmd_ptr = NULL;
+
+                return -1;
+            }
+            continue;
+        }
+        if (stricmp(cmd, "je") == 0) {
+            if (GetJmp(ASM, CMD_JE) != 0) {
                 fclose(ASM->cmd_ptr);
                 ASM->cmd_ptr = NULL;
 

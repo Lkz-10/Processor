@@ -41,12 +41,15 @@ enum CMD_CODES
     CMD_SUB  =  0x04,
     CMD_MUL  =  0x05,
     CMD_DIV  =  0x06,
-    CMD_OUT  =  0x07,
-    CMD_IN   =  0x08,
-    CMD_JMP  =  0x09,
-    CMD_JB   =  0x0A,
-    CMD_VIS  =  0x0B,
-    CMD_DUMP =  0x0C,
+    CMD_SQR  =  0x07,
+    CMD_SQRT =  0x08,
+    CMD_OUT  =  0x09,
+    CMD_IN   =  0x0A,
+    CMD_JMP  =  0x0B,
+    CMD_JB   =  0x0C,
+    CMD_JE   =  0x0D,
+    CMD_VIS  =  0x0E,
+    CMD_DUMP =  0x0F,
     CMD_HLT  =  0x00
 };
 
@@ -61,8 +64,8 @@ enum registers
 };
 
 const int NREGS           = 5;
-const int RAM_SIZE        = 100;
-const int RAM_LINE_LENGTH = 10;
+const int RAM_SIZE        = 121;
+const int RAM_LINE_LENGTH = 11;
 
 struct SPU_t
 {

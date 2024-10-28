@@ -12,7 +12,12 @@ int RunCode(SPU_t* SPU, const char* file_out_name)
         {
             case CMD_PUSH:
             {
-                if (DoPush(SPU) != 0) return -1;
+                if (DoPush(SPU) != 0) {
+                    fclose(file_out_ptr);
+                    file_out_ptr = NULL;
+
+                    return -1;
+                }
                 break;
             }
             case CMD_POP:
@@ -40,6 +45,21 @@ int RunCode(SPU_t* SPU, const char* file_out_name)
                 DoDiv(SPU);
                 break;
             }
+            case CMD_SQR:
+            {
+                DoSqr(SPU);
+                break;
+            }
+            case CMD_SQRT:
+            {
+                if (DoSqrt(SPU) != 0) {
+                    fclose(file_out_ptr);
+                    file_out_ptr = NULL;
+
+                    return -1;
+                }
+                break;
+            }
             case CMD_OUT:
             {
                 DoOut(SPU, file_out_ptr);
@@ -47,7 +67,12 @@ int RunCode(SPU_t* SPU, const char* file_out_name)
             }
             case CMD_IN:
             {
-                if (DoIn(SPU) != 0) return -1;
+                if (DoIn(SPU) != 0) {
+                    fclose(file_out_ptr);
+                    file_out_ptr = NULL;
+
+                    return -1;
+                }
                 break;
             }
             case CMD_JMP:
@@ -58,6 +83,11 @@ int RunCode(SPU_t* SPU, const char* file_out_name)
             case CMD_JB:
             {
                 DoJb(SPU);
+                break;
+            }
+            case CMD_JE:
+            {
+                DoJe(SPU);
                 break;
             }
             case CMD_VIS:
@@ -189,6 +219,40 @@ int DoDiv(SPU_t* SPU)
     return 0;
 }
 
+int DoSqr(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    elem_t elem = StackPop(&SPU->stack);
+
+    StackPush(&SPU->stack, elem * elem);
+
+    (SPU->ip)++;
+
+    return 0;
+}
+
+int DoSqrt(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    double val = (double) StackPop(&SPU->stack);
+
+    if (val < 0)
+    {
+        fprintf(stderr, "Error: square root of negative number %lg!\n", val);
+        return -1;
+    }
+
+    val = sqrt(val);
+
+    StackPush(&SPU->stack, (int) val);
+
+    (SPU->ip)++;
+
+    return 0;
+}
+
 int DoOut(SPU_t* SPU, FILE* file_ptr)
 {
     SPU_VERIFY
@@ -242,6 +306,16 @@ int DoJb(SPU_t* SPU)
     return 0;
 }
 
+int DoJe(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    if (StackPop(&SPU->stack) == StackPop(&SPU->stack)) DoJmp(SPU);
+    else SPU->ip += 2;
+
+    return 0;
+}
+
 int DoVis(SPU_t* SPU, FILE* file_ptr)
 {
     SPU_VERIFY
@@ -252,11 +326,11 @@ int DoVis(SPU_t* SPU, FILE* file_ptr)
         {
             if ((SPU->RAM + i * RAM_LINE_LENGTH)[j] == 0)
             {
-                fprintf(file_ptr, ". ");
+                fprintf(file_ptr, ".  ");
             }
             else
             {
-                fprintf(file_ptr, "* ");
+                fprintf(file_ptr, "*  ");
             }
         }
         fprintf(file_ptr, "\n");
