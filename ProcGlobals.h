@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include "StackGlobals.h"
 
-#define DEF_CMD(cmd, num, ...) \
-    CMD_##cmd = num,
 
 typedef int elem_t;
 
@@ -37,28 +35,33 @@ enum CMD_MODES
     RAM_MODE    = 0x80
 };
 
+#define DEF_CMD(cmd, num, ...) \
+    CMD_##cmd = num,
+
 enum CMD_CODES
 {
-    CMD_PUSH =  0x01,
-    CMD_POP  =  0x02,
-    CMD_ADD  =  0x03,
-    CMD_SUB  =  0x04,
-    CMD_MUL  =  0x05,
-    CMD_DIV  =  0x06,
-    CMD_SQR  =  0x07,
-    CMD_SQRT =  0x08,
-    CMD_OUT  =  0x09,
-    CMD_IN   =  0x0A,
-    CMD_JMP  =  0x0B,
-    CMD_JB   =  0x0C,
-    CMD_JE   =  0x0D,
-    CMD_VIS  =  0x0E,
-    CMD_DUMP =  0x0F,
-    CMD_CALL =  0x10,
-    CMD_RET  =  0x11,
-    CMD_HLT  =  0x00
-    //#include "Commands_DSL.h"
+    // CMD_PUSH =  0x01,
+    // CMD_POP  =  0x02,
+    // CMD_ADD  =  0x03,
+    // CMD_SUB  =  0x04,
+    // CMD_MUL  =  0x05,
+    // CMD_DIV  =  0x06,
+    // CMD_SQR  =  0x07,
+    // CMD_SQRT =  0x08,
+    // CMD_OUT  =  0x09,
+    // CMD_IN   =  0x0A,
+    // CMD_JMP  =  0x0B,
+    // CMD_JB   =  0x0C,
+    // CMD_JE   =  0x0D,
+    // CMD_VIS  =  0x0E,
+    // CMD_DUMP =  0x0F,
+    // CMD_CALL =  0x10,
+    // CMD_RET  =  0x11,
+    // CMD_HLT  =  0x00
+    #include "Commands_DSL.h"
 };
+
+#undef DEF_CMD
 
 enum registers
 {
