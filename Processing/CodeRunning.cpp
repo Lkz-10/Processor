@@ -100,6 +100,21 @@ int RunCode(SPU_t* SPU, const char* file_out_name)
                 DoDump(SPU, file_out_ptr);
                 break;
             }
+            case CMD_CALL:
+            {
+                DoCall(SPU);
+                break;
+            }
+            case CMD_RET:
+            {
+                if (DoRet(SPU) != 0) {
+                    fclose(file_out_ptr);
+                    file_out_ptr = NULL;
+
+                    return -1;
+                }
+                break;
+            }
             case CMD_HLT:
             {
                 fclose(file_out_ptr);
@@ -300,7 +315,7 @@ int DoJb(SPU_t* SPU)
     elem_t elem1 = StackPop(&SPU->stack);
     elem_t elem2 = StackPop(&SPU->stack);
 
-    if (elem1 > elem2) DoJmp(SPU);
+    if (elem1 > elem2) SPU->ip = SPU->code[SPU->ip + 1];
     else SPU->ip += 2;
 
     return 0;
@@ -310,8 +325,38 @@ int DoJe(SPU_t* SPU)
 {
     SPU_VERIFY
 
-    if (StackPop(&SPU->stack) == StackPop(&SPU->stack)) DoJmp(SPU);
+    if (StackPop(&SPU->stack) == StackPop(&SPU->stack)) SPU->ip = SPU->code[SPU->ip + 1];
     else SPU->ip += 2;
+
+    return 0;
+}
+
+int DoCall(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    StackPush(&SPU->ret_addrs, SPU->ip + 2);
+
+    SPU->ip = SPU->code[SPU->ip + 1];
+
+    return 0;
+}
+
+int DoRet(SPU_t* SPU)
+{
+    SPU_VERIFY
+
+    int address_to_return_to_right_now = StackPop(&SPU->ret_addrs);
+
+    if (address_to_return_to_right_now == POISON ||
+        address_to_return_to_right_now < 0       ||
+        address_to_return_to_right_now > SPU->code_size - 1)
+    {
+        fprintf(stderr, "Error: ret() is called for wrong ip\n");
+        return -1;
+    }
+
+    SPU->ip = address_to_return_to_right_now;
 
     return 0;
 }

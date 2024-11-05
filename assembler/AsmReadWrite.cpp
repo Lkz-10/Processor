@@ -73,6 +73,19 @@ int ReadAsmCode(ASM_t* ASM)
             StackPush(&ASM->code, CMD_IN);
             continue;
         }
+        if (stricmp(cmd, "call") == 0) {
+            if (GetJmp(ASM, CMD_CALL) != 0) {
+                fclose(ASM->cmd_ptr);
+                ASM->cmd_ptr = NULL;
+
+                return -1;
+            }
+            continue;
+        }
+        if (stricmp(cmd, "ret") == 0) {
+            StackPush(&ASM->code, CMD_RET);
+            continue;
+        }
         if (stricmp(cmd, "jmp") == 0) {
             if (GetJmp(ASM, CMD_JMP) != 0) {
                 fclose(ASM->cmd_ptr);
@@ -132,7 +145,7 @@ int GetLabel (ASM_t* ASM, const char* label_name)
         return -1;
     }
 
-    (ASM->labels[ASM->nLabels]).name = strdup(label_name);
+    (ASM->labels[ASM->nLabels]).name    = strdup(label_name);
 
     (ASM->labels[ASM->nLabels]).address = (int) (ASM->code).sz;
 

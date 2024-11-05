@@ -25,6 +25,9 @@ int DoSqrt  (SPU_t* SPU);
 int DoOut   (SPU_t* SPU, FILE* file_ptr);
 int DoIn    (SPU_t* SPU);
 
+int DoCall  (SPU_t* SPU);
+int DoRet   (SPU_t* SPU);
+
 int DoJmp   (SPU_t* SPU);
 int DoJb    (SPU_t* SPU);
 int DoJe    (SPU_t* SPU);

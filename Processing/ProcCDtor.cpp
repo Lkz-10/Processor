@@ -25,7 +25,8 @@ int SPU_Ctor (SPU_t* SPU, const char* file_name)
 
     SPU->ip = 0;
 
-    if (StackCtor(&SPU->stack) != 0) return -1;
+    if (StackCtor(&SPU->stack)     != 0) return -1;
+    if (StackCtor(&SPU->ret_addrs) != 0) return -1;
 
     if (ReadCode(SPU, code_ptr) != 0) return -1;
 

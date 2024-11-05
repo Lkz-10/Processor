@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include "StackGlobals.h"
 
+#define DEF_CMD(cmd, num, ...) \
+    CMD_##cmd = num,
+
 typedef int elem_t;
 
 struct Code_header
@@ -16,21 +19,22 @@ const int SIGNATURE         = *((const int*) "LkzX");
 const int ASM_VERSION       = 1;
 const int MAX_STRING_LENGTH = 52;
 
-#define SPU_VERIFY             \
-    assert(SPU);               \
-    assert(SPU->code);         \
-    assert(SPU->stack.data);   \
-    assert(SPU->RAM);          \
+#define SPU_VERIFY               \
+    assert(SPU);                 \
+    assert(SPU->code);           \
+    assert(SPU->stack.data);     \
+    assert(SPU->ret_addrs.data); \
+    assert(SPU->RAM);            \
     assert(SPU->regs);
 
-const int CMD_MASK    = 0x0F;
-const int MODE_MASK   = 0xF0;
+const int CMD_MASK    = 0x1F;
+const int MODE_MASK   = 0xE0;
 
 enum CMD_MODES
 {
-    NUMBER_MODE = 0x10,
-    REGS_MODE   = 0x20,
-    RAM_MODE    = 0x40
+    NUMBER_MODE = 0x20,
+    REGS_MODE   = 0x40,
+    RAM_MODE    = 0x80
 };
 
 enum CMD_CODES
@@ -50,7 +54,10 @@ enum CMD_CODES
     CMD_JE   =  0x0D,
     CMD_VIS  =  0x0E,
     CMD_DUMP =  0x0F,
+    CMD_CALL =  0x10,
+    CMD_RET  =  0x11,
     CMD_HLT  =  0x00
+    //#include "Commands_DSL.h"
 };
 
 enum registers
@@ -75,6 +82,7 @@ struct SPU_t
     elem_t  regs[NREGS]    = {};
     elem_t  RAM [RAM_SIZE] = {};
     Stk_t   stack;
+    Stk_t   ret_addrs;
 };
 
 enum verify_modes
@@ -89,13 +97,13 @@ struct Label
     int   address = -1;
 };
 
-const int LABELS_ARR_SIZE = 10;
+const int LABELS_ARR_SIZE = 32;
 
 struct ASM_t
 {
     Stk_t   code;
-    Label   labels[LABELS_ARR_SIZE] = {};
     int     nLabels                 = 0;
+    Label   labels[LABELS_ARR_SIZE] = {};
     FILE*   cmd_ptr;
 };
 
