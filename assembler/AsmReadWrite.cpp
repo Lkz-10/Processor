@@ -16,7 +16,12 @@ int ReadAsmCode(ASM_t* ASM)
         }
 
         if (strchr(cmd, ':') != NULL) {
-            if (GetLabel(ASM, cmd) != 0) return -1;
+            if (GetLabel(ASM, cmd) != 0) {
+                fclose(ASM->cmd_ptr);
+                ASM->cmd_ptr = NULL;
+
+                return -1;
+            }
             continue;
         }
         if (stricmp(cmd, "push") == 0) {
